@@ -1,7 +1,8 @@
 package org.opencdmp.filetransformerbase.interfaces;
 
 
-import org.opencdmp.filetransformerbase.enums.FileTransformerEntityType;
+import org.opencdmp.commonmodels.enums.PluginEntityType;
+import org.opencdmp.commonmodels.models.ConfigurationField;
 import org.opencdmp.filetransformerbase.models.misc.FileFormat;
 
 import java.util.List;
@@ -9,10 +10,12 @@ import java.util.List;
 public class FileTransformerConfiguration {
     private String fileTransformerId;
     private List<FileFormat> exportVariants;
-    private List<FileTransformerEntityType> exportEntityTypes;
+    private List<PluginEntityType> exportEntityTypes;
     private List<FileFormat> importVariants;
-    private List<FileTransformerEntityType> importEntityTypes;
+    private List<PluginEntityType> importEntityTypes;
     private boolean useSharedStorage;
+    private List<ConfigurationField> configurationFields;
+    private List<ConfigurationField> userConfigurationFields;
 
     public String getFileTransformerId() {
         return fileTransformerId;
@@ -46,19 +49,35 @@ public class FileTransformerConfiguration {
         this.useSharedStorage = useSharedStorage;
     }
 
-    public List<FileTransformerEntityType> getExportEntityTypes() {
+    public List<PluginEntityType> getExportEntityTypes() {
         return exportEntityTypes;
     }
 
-    public void setExportEntityTypes(List<FileTransformerEntityType> exportEntityTypes) {
+    public void setExportEntityTypes(List<PluginEntityType> exportEntityTypes) {
         this.exportEntityTypes = exportEntityTypes;
     }
 
-    public List<FileTransformerEntityType> getImportEntityTypes() {
+    public List<PluginEntityType> getImportEntityTypes() {
         return importEntityTypes;
     }
 
-    public void setImportEntityTypes(List<FileTransformerEntityType> importEntityTypes) {
+    public void setImportEntityTypes(List<PluginEntityType> importEntityTypes) {
         this.importEntityTypes = importEntityTypes;
+    }
+
+    public List<ConfigurationField> getConfigurationFields() {
+        return configurationFields;
+    }
+
+    public void setConfigurationFields(List<ConfigurationField> configurationFields) {
+        this.configurationFields = configurationFields;
+    }
+
+    public List<ConfigurationField> getUserConfigurationFields() {
+        return userConfigurationFields;
+    }
+
+    public void setUserConfigurationFields(List<ConfigurationField> userConfigurationFields) {
+        this.userConfigurationFields = userConfigurationFields;
     }
 }
