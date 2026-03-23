@@ -18,10 +18,10 @@ public interface FileTransformerController {
 
 
 	@PostMapping("/export/plan")
-	FileEnvelopeModel exportPlan(@RequestBody PlanModel planModel, @RequestParam(value = "format",required = false)String format) throws Exception ;
+	FileEnvelopeModel exportPlan(@RequestBody PlanModel planModel, @RequestParam(value = "format",required = false)String format);
 
 	@PostMapping("/export/description")
-	FileEnvelopeModel exportDescription(@RequestBody DescriptionModel descriptionModel, @RequestParam(value = "format",required = false)String format) throws Exception;
+	FileEnvelopeModel exportDescription(@RequestBody DescriptionModel descriptionModel, @RequestParam(value = "format",required = false)String format);
 
 	@PostMapping("/import/plan")
 	PlanModel importFileToPlan(@RequestBody PlanImportModel planImportModel);

@@ -1,6 +1,5 @@
 package org.opencdmp.filetransformerbase.interfaces;
 
-import com.sun.jdi.InvalidTypeException;
 import org.opencdmp.commonmodels.models.FileEnvelopeModel;
 import org.opencdmp.commonmodels.models.description.DescriptionModel;
 import org.opencdmp.commonmodels.models.plan.PlanModel;
@@ -9,8 +8,6 @@ import org.opencdmp.filetransformerbase.models.misc.PlanImportModel;
 import org.opencdmp.filetransformerbase.models.misc.PreprocessingDescriptionModel;
 import org.opencdmp.filetransformerbase.models.misc.PreprocessingPlanModel;
 
-import javax.management.InvalidApplicationException;
-import java.io.IOException;
 
 /**
  * The File Transformer interface represents the mechanism for exporting and importing file formats
@@ -25,7 +22,7 @@ public interface FileTransformerClient {
      * @return object that contains export info
      * @throws Exception if an error occurs while trying to export the plan
      */
-    FileEnvelopeModel exportPlan(PlanModel plan, String variant) throws InvalidApplicationException, IOException, InvalidTypeException;
+    FileEnvelopeModel exportPlan(PlanModel plan, String variant);
     /**
      * Returns a plan from import data.
      *
@@ -41,7 +38,7 @@ public interface FileTransformerClient {
      * @return object that contains export info
      * @throws Exception if an error occurs while trying to export the description
      */
-    FileEnvelopeModel exportDescription(DescriptionModel descriptionFileTransformerModel, String format) throws InvalidApplicationException, IOException;
+    FileEnvelopeModel exportDescription(DescriptionModel descriptionFileTransformerModel, String format);
 
     /**
      * Returns a plan from import data.
