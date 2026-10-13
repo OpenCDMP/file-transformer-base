@@ -1,229 +1,97 @@
-# File Transformer Base for OpenCDMP
+# OpenCDMP file transformer base
 
-**file-transformer-base** is a Maven package that provides the base interfaces and configuration classes required to implement custom file transformer services for the **OpenCDMP** platform. Each file transformer is developed as a separate microservice and can be registered with OpenCDMP to support custom import/export operations for various data formats.
+**file-transformer-base** is the Maven package that defines the contract between [OpenCDMP](https://github.com/OpenCDMP/OpenCDMP) and its file transformer plugins. A file transformer is a separate Spring Boot service that exports plans and descriptions to a file format, or imports them from one. OpenCDMP calls it over HTTP with the models of the [common-models](https://github.com/OpenCDMP/common-models) package.
 
----
+The package holds the Java interfaces that a transformer implements, the configuration that it reports to OpenCDMP, and the models of import, preprocessing and template validation. It contains no transformation logic.
 
-## Overview
+**Documentation**: [File transformer plugin guide](https://opencdmp.github.io/developers/plugins/file-transformers/)
 
-OpenCDMP supports file transformation services for both importing and exporting different file formats. This functionality is built upon a flexible and extensible mechanism that allows developers to add new file transformers based on specific format requirements.
+## Requirements
 
-The **file-transformer-base** package provides the necessary Java interfaces and configuration classes to define and develop these transformers.
+- Java 21 or later
+- Maven
+- Spring Boot 4 for the transformer service, as in the reference transformers
+- [common-models](https://github.com/OpenCDMP/common-models), which this package brings in as a dependency
 
-**Documentation**: [File Transformation Service Guide](https://opencdmp.github.io/developers/plugins/file-transformers/)
+## What the package contains
 
----
+| Class | Purpose |
+| --- | --- |
+| `FileTransformerClient` | The operations a transformer implements: export and import of plans and descriptions, preprocessing of an uploaded file before import, its configuration, and optional template validation. |
+| `FileTransformerController` | The REST endpoints a transformer exposes under `/api/file-transformer`. Implement it as a `@RestController` that delegates to your `FileTransformerClient`. |
+| `FileTransformerConfiguration` | What the transformer reports to OpenCDMP: its id, export and import formats, the entity types it handles (`PluginEntityType.Plan`, `PluginEntityType.Description`), whether it uses shared storage, its configuration fields for administrators and users, and an optional semantics manifest. |
+| `FileFormat` | One supported format, such as `docx`, `pdf` or `json`. |
+| `PlanImportModel`, `DescriptionImportModel` | The uploaded file and the plan blueprint or description template to import into. |
+| `PreprocessingPlanModel`, `PreprocessingDescriptionModel` | What the transformer found in an uploaded file, shown to the user before the import. |
+| `TemplateValidationResultModel`, `TemplateValidationIssueModel`, `TemplateValidationIssueLevel` | The result of validating an uploaded export template. |
 
-## Prerequisites
+`validateTemplate` is a `default` method of both interfaces that returns `null`, so a transformer without export templates can leave it out.
 
-- **Java**: Version 21 or higher
-- **Spring Boot**: Version 3.x
-- **Maven**: Version 3.6 or higher
-- **common-models**: OpenCDMP [common models](https://github.com/OpenCDMP/common-models) package
+### Endpoints
 
----
+| Method | Path | Request body | Response |
+| --- | --- | --- | --- |
+| `POST` | `/api/file-transformer/export/plan?format=<format>` | `PlanModel` | `FileEnvelopeModel` |
+| `POST` | `/api/file-transformer/export/description?format=<format>` | `DescriptionModel` | `FileEnvelopeModel` |
+| `POST` | `/api/file-transformer/import/plan` | `PlanImportModel` | `PlanModel` |
+| `POST` | `/api/file-transformer/import/description` | `DescriptionImportModel` | `DescriptionModel` |
+| `POST` | `/api/file-transformer/preprocessing/plan` | `FileEnvelopeModel` | `PreprocessingPlanModel` |
+| `POST` | `/api/file-transformer/preprocessing/description` | `FileEnvelopeModel` | `PreprocessingDescriptionModel` |
+| `GET` | `/api/file-transformer/formats` | - | `FileTransformerConfiguration` |
+| `POST` | `/api/file-transformer/validate-template?entityType=Plan` (or `Description`) | `FileEnvelopeModel` | `TemplateValidationResultModel` |
 
-## Key Interfaces and Classes
+The [plugin guide](https://opencdmp.github.io/developers/plugins/file-transformers/) describes each method and model, template validation, and per-export options.
 
-### 1. `FileTransformerClient.java`
+## Use it in a transformer
 
-This interface defines the core operations that any file transformer should implement.
-
-```java
-public interface FileTransformerClient {
-
-    FileEnvelopeModel exportPlan(PlanModel plan, String variant)
-        throws InvalidApplicationException, IOException, InvalidTypeException;
-
-    PlanModel importPlan(PlanImportModel planImportModel);
-
-    FileEnvelopeModel exportDescription(DescriptionModel descriptionFileTransformerModel, String format)
-        throws InvalidApplicationException, IOException;
-
-    DescriptionModel importDescription(DescriptionImportModel descriptionImportModel);
-
-    FileTransformerConfiguration getConfiguration();
-
-    PreprocessingPlanModel preprocessingPlan(FileEnvelopeModel fileEnvelopeModel);
-
-    PreprocessingDescriptionModel preprocessingDescription(FileEnvelopeModel fileEnvelopeModel);
-}
-```
-
-This interface handles:
-- **Plan Export/Import**: Defines methods for exporting and importing Plan models
-- **Description Export/Import**: Defines methods for exporting and importing Descriptions
-- **Preprocessing**: Supports preprocessing of both Plans and Descriptions before import/export
-- **Configuration**: Returns the file transformer configuration
-
-### 2. `FileTransformerController.java`
-
-This interface ensures that the file transformer provides the required REST API endpoints for communication with the OpenCDMP platform.
-
-```java
-@RequestMapping("/api/file-transformer")
-public interface FileTransformerController {
-
-    @PostMapping("/export/plan")
-    FileEnvelopeModel exportPlan(@RequestBody PlanModel planModel,
-        @RequestParam(value = "format", required = false) String format) throws Exception;
-
-    @PostMapping("/export/description")
-    FileEnvelopeModel exportDescription(@RequestBody DescriptionModel descriptionModel,
-        @RequestParam(value = "format", required = false) String format) throws Exception;
-
-    @PostMapping("/import/plan")
-    PlanModel importFileToPlan(@RequestBody PlanImportModel planImportModel);
-
-    @PostMapping("/import/description")
-    DescriptionModel importFileToDescription(@RequestBody DescriptionImportModel descriptionImportModel);
-
-    @PostMapping("/preprocessing/plan")
-    PreprocessingPlanModel preprocessingPlan(@RequestBody FileEnvelopeModel fileEnvelopeModel);
-
-    @PostMapping("/preprocessing/description")
-    PreprocessingDescriptionModel preprocessingDescription(@RequestBody FileEnvelopeModel fileEnvelopeModel);
-
-    @GetMapping("/formats")
-    FileTransformerConfiguration getSupportedFormats();
-}
-```
-
-This interface ensures:
-- **REST API Endpoints** for handling file import/export operations
-- **Preprocessing and format support** for Plans and Descriptions
-- **Supported formats** endpoint to return a list of formats the transformer can handle
-
-### 3. `FileTransformerConfiguration.java`
-
-This class contains the configuration details for each file transformer, which the OpenCDMP platform reads and registers.
-
-```java
-public class FileTransformerConfiguration {
-    private String fileTransformerId;
-    private List<FileFormat> exportVariants;
-    private List<FileTransformerEntityType> exportEntityTypes;
-    private List<FileFormat> importVariants;
-    private List<FileTransformerEntityType> importEntityTypes;
-    private boolean useSharedStorage;
-    private List<ConfigurationField> configurationFields;
-    private List<ConfigurationField> userConfigurationFields;
-}
-```
-
-**Fields**:
-- `fileTransformerId`: Unique identifier for the transformer
-- `exportVariants` and `importVariants`: Supported file formats for export and import (e.g., PDF, DOCX, XML, JSON)
-- `exportEntityTypes` and `importEntityTypes`: Entity types the transformer supports (Plans, Descriptions)
-- `useSharedStorage`: Indicates if shared storage is used for the transformer
-- `configurationFields`: Fields that could contain additional configuration.
-- `configurationUserFields`: Fields that provide additional configuration options for **OpenCDMP** users
-
----
-
-## How to Create a Custom File Transformer
-
-To implement a custom file transformer service for OpenCDMP:
-
-[How to Create a Custom File Transformer](https://opencdmp.github.io/developers/plugins/file-transformers/#how-to-create-a-custom-file-transformer)
-
-### 1. Create a New Spring Boot Project
-
-Create a Maven-based Spring Boot microservice that implements the `FileTransformerClient` and `FileTransformerController` interfaces.
-
-**Maven Dependency**:
+Add the dependency to your Spring Boot project, with the latest release from [Maven Central](https://central.sonatype.com/artifact/org.opencdmp/file-transformer-base):
 
 ```xml
 <dependency>
     <groupId>org.opencdmp</groupId>
     <artifactId>file-transformer-base</artifactId>
-    <version>1.2.0</version>
+    <version>${file-transformer-base.version}</version>
 </dependency>
 ```
 
-### 2. Implement the Interfaces
+Then:
 
-Create implementation classes for both interfaces:
+1. Implement `FileTransformerClient` in a `@Service` and `FileTransformerController` in a `@RestController`. See [How to create a custom file transformer](https://opencdmp.github.io/developers/plugins/file-transformers/#how-to-create-a-custom-file-transformer).
+2. Accept only tokens of the installation's Keycloak realm that carry the `plugins` audience. See [Step 5: configure security and deploy](https://opencdmp.github.io/developers/plugins/file-transformers/#step-5--configure-security-and-deploy).
+3. Try the transformer against a local installation. See [Run and test a plugin locally](https://opencdmp.github.io/developers/plugins/run-locally/).
+4. Register it for the whole installation or for one organisation. See [Registering plugin services](https://opencdmp.github.io/deployment/configuration/plugin-services/).
 
-```java
-@Service
-public class MyFileTransformerClient implements FileTransformerClient {
+### Reference implementations
 
-    @Override
-    public FileEnvelopeModel exportPlan(PlanModel plan, String variant) {
-        // Implement your export logic
-    }
+| Repository | What it does |
+| --- | --- |
+| [file-transformer-docx](https://github.com/OpenCDMP/file-transformer-docx) | Exports plans and descriptions as DOCX and PDF, and validates export templates |
+| [file-transformer-rda-json](https://github.com/OpenCDMP/file-transformer-rda-json) | Exports and imports plans as RDA DMP Common Standard JSON |
+| [file-transformer-raid-json](https://github.com/OpenCDMP/file-transformer-raid-json) | Exports and imports plans as RAiD metadata JSON |
 
-    @Override
-    public FileTransformerConfiguration getConfiguration() {
-        FileTransformerConfiguration config = new FileTransformerConfiguration();
-        config.setFileTransformerId("my-transformer");
-        // Configure supported formats and entity types
-        return config;
-    }
+## Build from source
 
-    // Implement other methods...
-}
-
-@RestController
-public class MyFileTransformerController implements FileTransformerController {
-
-    private final MyFileTransformerClient client;
-
-    // Implement controller methods delegating to client...
-}
+```bash
+mvn clean install
 ```
 
-### 3. Define Your Formats and Entity Types
+This installs version `1.0.0-SNAPSHOT` in your local Maven repository, where a transformer built on the same machine finds it. To install another version, set it first with `mvn versions:set -DnewVersion=<version>`.
 
-In your implementation, define the supported file formats and entity types for your import/export operations
+## Related resources
 
-### 4. Configure and Deploy
+- [File transformer plugin guide](https://opencdmp.github.io/developers/plugins/file-transformers/)
+- [Common models](https://opencdmp.github.io/developers/plugins/common-models/) and the [common-models repository](https://github.com/OpenCDMP/common-models)
+- [File transformers overview](https://opencdmp.github.io/optional-services/file-transformers/)
+- [OpenCDMP](https://github.com/OpenCDMP/OpenCDMP)
 
-Configure your service endpoints and deploy as a standalone microservice accessible to the OpenCDMP platform.
+## Contributing
 
-### 5. Register the Service
-
-Once your service is implemented and running, register it with the OpenCDMP.
-
----
-
-## Reference Implementations
-
-You can refer to the [file-transformer-docx](https://github.com/OpenCDMP/file-transformer-docx), [file-transformer-rda-json](https://github.com/OpenCDMP/file-transformer-rda-json) and [file-transformer-raid-json](https://github.com/OpenCDMP/file-transformer-raid-json) projects that are part of the OpenCDMP platform as examples.
-
----
-
-## Architecture Integration
-
-File transformer services integrate with OpenCDMP through:
-
-1. **REST API**: Services expose endpoints defined by `FileTransformerController`
-2. **Service Registry**: OpenCDMP backend registers available transformers via configuration
-3. **Common Models**: Data exchange using shared models from `common-models` package
-4. **Microservices**: Each transformer runs as an independent service
-
-## Related Resources
-
-- **Common Models**: [common-models repository](https://github.com/OpenCDMP/common-models)
-- **Main Repository**: [OpenCDMP](https://github.com/OpenCDMP/OpenCDMP)
-- **File Transformers Overview**: https://opencdmp.github.io/optional-services/file-transformers
-- **Developer Plugin Guide**: https://opencdmp.github.io/developers/plugins/file-transformers
-
----
+Report bugs and suggest changes in [GitHub Issues](https://github.com/OpenCDMP/file-transformer-base/issues). See [Contributing](https://opencdmp.github.io/developers/contributing/) for how to propose a change.
 
 ## License
 
-This package is licensed under the [EUPL 1.2 License](LICENSE).
-
----
+file-transformer-base is licensed under the [European Union Public Licence (EUPL) v1.2](LICENSE).
 
 ## Contact
 
-For questions or support regarding the implementation of file transformers, please contact:
-
-- **Email**: opencdmp at cite.gr
-
----
-
-*This package is part of the OpenCDMP ecosystem. For general OpenCDMP documentation, visit [opencdmp.github.io](https://opencdmp.github.io).*
+Questions: email opencdmp at cite.gr.

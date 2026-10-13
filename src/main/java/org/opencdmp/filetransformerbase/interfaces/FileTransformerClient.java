@@ -1,5 +1,6 @@
 package org.opencdmp.filetransformerbase.interfaces;
 
+import org.opencdmp.commonmodels.enums.PluginEntityType;
 import org.opencdmp.commonmodels.models.FileEnvelopeModel;
 import org.opencdmp.commonmodels.models.description.DescriptionModel;
 import org.opencdmp.commonmodels.models.plan.PlanModel;
@@ -7,6 +8,7 @@ import org.opencdmp.filetransformerbase.models.misc.DescriptionImportModel;
 import org.opencdmp.filetransformerbase.models.misc.PlanImportModel;
 import org.opencdmp.filetransformerbase.models.misc.PreprocessingDescriptionModel;
 import org.opencdmp.filetransformerbase.models.misc.PreprocessingPlanModel;
+import org.opencdmp.filetransformerbase.models.misc.TemplateValidationResultModel;
 
 
 /**
@@ -65,5 +67,17 @@ public interface FileTransformerClient {
      * @return description after preprocessing
      */
     PreprocessingDescriptionModel preprocessingDescription(FileEnvelopeModel fileEnvelopeModel);
+
+    /**
+     * Validates an uploaded export template for this transformer (optional capability).
+     * Transformers that do not support template validation keep the default and return null.
+     *
+     * @param fileEnvelopeModel the template file to validate
+     * @param entityType        the entity the template targets (plan or description)
+     * @return the validation result, or null when validation is not supported
+     */
+    default TemplateValidationResultModel validateTemplate(FileEnvelopeModel fileEnvelopeModel, PluginEntityType entityType) {
+        return null;
+    }
 
 }

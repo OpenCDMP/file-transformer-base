@@ -3,6 +3,7 @@ package org.opencdmp.filetransformerbase.interfaces;
 
 import org.opencdmp.commonmodels.enums.PluginEntityType;
 import org.opencdmp.commonmodels.models.ConfigurationField;
+import org.opencdmp.commonmodels.models.semantics.SemanticsManifest;
 import org.opencdmp.filetransformerbase.models.misc.FileFormat;
 
 import java.util.List;
@@ -16,6 +17,8 @@ public class FileTransformerConfiguration {
     private boolean useSharedStorage;
     private List<ConfigurationField> configurationFields;
     private List<ConfigurationField> userConfigurationFields;
+    /** The semantic keys the plugin reads, for editors to show what it can do with a template or blueprint; optional. */
+    private SemanticsManifest semantics;
 
     public String getFileTransformerId() {
         return fileTransformerId;
@@ -79,5 +82,13 @@ public class FileTransformerConfiguration {
 
     public void setUserConfigurationFields(List<ConfigurationField> userConfigurationFields) {
         this.userConfigurationFields = userConfigurationFields;
+    }
+
+    public SemanticsManifest getSemantics() {
+        return semantics;
+    }
+
+    public void setSemantics(SemanticsManifest semantics) {
+        this.semantics = semantics;
     }
 }

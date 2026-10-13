@@ -8,7 +8,7 @@ import java.util.UUID;
 public class DescriptionImportModel {
     private DescriptionTemplateModel descriptionTemplate;
 
-    private UUID sectionId;
+    private String sectionId;
 
     private String id;
 
@@ -23,11 +23,11 @@ public class DescriptionImportModel {
         this.descriptionTemplate = descriptionTemplate;
     }
 
-    public UUID getSectionId() {
+    public String getSectionId() {
         return sectionId;
     }
 
-    public void setSectionId(UUID sectionId) {
+    public void setSectionId(String sectionId) {
         this.sectionId = sectionId;
     }
 

@@ -5,8 +5,10 @@ import org.opencdmp.commonmodels.models.description.DescriptionModel;
 import org.opencdmp.commonmodels.models.plan.PlanModel;
 import org.opencdmp.filetransformerbase.models.misc.DescriptionImportModel;
 import org.opencdmp.filetransformerbase.models.misc.PlanImportModel;
+import org.opencdmp.commonmodels.enums.PluginEntityType;
 import org.opencdmp.filetransformerbase.models.misc.PreprocessingDescriptionModel;
 import org.opencdmp.filetransformerbase.models.misc.PreprocessingPlanModel;
+import org.opencdmp.filetransformerbase.models.misc.TemplateValidationResultModel;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -37,5 +39,14 @@ public interface FileTransformerController {
 
 	@GetMapping("/formats")
 	FileTransformerConfiguration getSupportedFormats();
+
+	/**
+	 * Optional capability: validates an uploaded export template. Transformers that do not
+	 * support template validation keep the default and return null.
+	 */
+	@PostMapping("/validate-template")
+	default TemplateValidationResultModel validateTemplate(@RequestBody FileEnvelopeModel fileEnvelopeModel, @RequestParam(value = "entityType", required = false) PluginEntityType entityType) {
+		return null;
+	}
 
 }
